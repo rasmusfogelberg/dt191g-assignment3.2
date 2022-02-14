@@ -1,3 +1,4 @@
+using DiscoSaurus.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DiscoSaurus.Data 
@@ -8,5 +9,8 @@ namespace DiscoSaurus.Data
     {
       
     }
+
+    public DbSet<Album>? Albums { get; set; }
+    public DbSet<Genre>? Genres { get; set; }
   }
 }
