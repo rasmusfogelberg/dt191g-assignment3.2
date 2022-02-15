@@ -50,8 +50,8 @@ namespace DiscoSaurus.Controllers
         // GET: Album/Create
         public IActionResult Create()
         {
-            ViewData["ArtistId"] = new SelectList(_context.Set<Artist>(), "ArtistId", "ArtistId");
-            ViewData["GenreId"] = new SelectList(_context.Set<Genre>(), "GenreId", "GenreId");
+            ViewData["ArtistName"] = new SelectList(_context.Set<Artist>(), "ArtistId", "Name");
+            ViewData["Name"] = new SelectList(_context.Set<Genre>(), "GenreId", "Name");
             return View();
         }
 
@@ -86,8 +86,8 @@ namespace DiscoSaurus.Controllers
             {
                 return NotFound();
             }
-            ViewData["ArtistId"] = new SelectList(_context.Set<Artist>(), "ArtistId", "ArtistId", album.ArtistId);
-            ViewData["GenreId"] = new SelectList(_context.Set<Genre>(), "GenreId", "GenreId", album.GenreId);
+            ViewData["ArtistName"] = new SelectList(_context.Set<Artist>(), "ArtistId", "Name", album.ArtistId);
+            ViewData["GenreName"] = new SelectList(_context.Set<Genre>(), "GenreId", "Name", album.GenreId);
             return View(album);
         }
 
