@@ -8,9 +8,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using DiscoSaurus.Models;
 using DiscoSaurus.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DiscoSaurus.Controllers
 {
+    [Authorize]
     public class ArtistController : Controller
     {
         private readonly DiscoSaurusContext _context;

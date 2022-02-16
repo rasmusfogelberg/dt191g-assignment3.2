@@ -1,4 +1,5 @@
 using DiscoSaurus.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -7,6 +8,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Add cookie authentication
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(
+        options =>
+        {
+            // Set cookie expiration time
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+            options.Cookie.Name = ".DiscoSaurus";
+            options.LoginPath = "/Login";
+        });
+
+// Connection string for database
 builder.Services.AddDbContext<DiscoSaurusContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultDbString")));
 
 var app = builder.Build();
@@ -24,6 +38,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

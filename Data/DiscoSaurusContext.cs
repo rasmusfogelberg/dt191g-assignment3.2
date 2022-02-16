@@ -9,10 +9,10 @@ namespace DiscoSaurus.Data
     {
     }
 
-    public DbSet<Album>? Albums { get; set; }
-    public DbSet<Genre>? Genres { get; set; }
-    public DbSet<Artist>? Artists { get; set; }
-    public DbSet<User>? Users { get; set; }
+    public DbSet<Album> Albums { get; set; }
+    public DbSet<Genre> Genres { get; set; }
+    public DbSet<Artist> Artists { get; set; }
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -38,11 +38,11 @@ namespace DiscoSaurus.Data
         new Album { AlbumId = 5, ArtistId = 5, GenreId = 3, Title = "Volume Rock", Price = 39.99m }
       );
 
-      builder.Entity<User>().HasData(
-        new User { UserId = 1, Name = "John Doe" },
-        new User { UserId = 2, Name = "Jane Smith" },
-        new User { UserId = 3, Name = "Moby Dick" }
-      );
+      /* builder.Entity<User>().HasData(
+        new User { UserId = 1, Username = "John Doe", Password = "password" },
+        new User { UserId = 2, Username = "Jane Smith", Password = "password"  },
+        new User { UserId = 3, Username = "Moby Dick", Password = "password"  }
+      ); */
     }
   }
 }
