@@ -31,7 +31,13 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Genre"
                                 asp-action="Index">Genres</a>
                         </li>
-                        </li>
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                {
+                            <li class="nav-item ms-auto">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Login"
+                                asp-action="Logout">@User.Identity.Name (logout)</a>
+                            </li>
+                                }
                     </ul>
                 </div>
             </div>
