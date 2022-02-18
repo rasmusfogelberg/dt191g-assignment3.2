@@ -4,11 +4,20 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using DiscoSaurus.Models;
+using DiscoSaurus.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DiscoSaurus.Controllers;
 
 public class LoginController : Controller
 {
+  private readonly DiscoSaurusContext _context;
+
+  public LoginController(DiscoSaurusContext context)
+  {
+    _context = context;
+  }
+
   public IActionResult Index()
   {
     return View();
@@ -26,11 +35,21 @@ public class LoginController : Controller
   public async Task<IActionResult> Login([Bind] User user)
   {
 
-    if (ModelState.IsValid && IsValidLogin(user.Username, user.Password))
-    { // Creates a list of claims containg claim-types for name and role
+    if (ModelState.IsValid)
+    { 
+      var validUser = await _context.Users.Where(userInDb => userInDb.Username == user.Username).FirstOrDefaultAsync();
+      
+      if (validUser == null)
+      {
+        ModelState.AddModelError(string.Empty, "Invalid username or password");
+        return View();
+      }
+      
+      // Creates a list of claims containg claim-types for name and role
       var claims = new List<Claim>
       {
-        new Claim(ClaimTypes.Name, user.Username),
+        new Claim(ClaimTypes.Name, validUser.Username),
+        new Claim(ClaimTypes.NameIdentifier, validUser.UserId.ToString()),
         new Claim(ClaimTypes.Role, "Admin")
       };
 
