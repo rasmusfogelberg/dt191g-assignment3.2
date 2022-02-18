@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using DiscoSaurus.Models;
 using DiscoSaurus.Data;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace DiscoSaurus.Controllers
 {
@@ -158,6 +159,54 @@ namespace DiscoSaurus.Controllers
       var album = await _context.Albums.FindAsync(id);
       _context.Albums.Remove(album);
       await _context.SaveChangesAsync();
+      return RedirectToAction(nameof(Index));
+    }
+
+    // GET: Album/Borrow/5
+    public async Task<IActionResult> Borrow(int? id)
+    {
+      if (id == null)
+      {
+        return NotFound();
+      }
+
+      var album = await _context.Albums
+          .Include(a => a.Artist)
+          .Include(a => a.Genre)
+          .FirstOrDefaultAsync(m => m.AlbumId == id);
+      if (album == null)
+      {
+        return NotFound();
+      }
+
+      return View(album);
+    }
+
+    // POST: Album/Borrow/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Borrow(int id, [Bind("AlbumId,UserId")] Album albumToBorrow)
+    {
+      var album = await _context.Albums.FindAsync(id);
+      var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+      var user = await _context.Users.FindAsync(userId);
+
+      // Add to "Borrow"-table: UserId and AlbumId
+      string name = this.User.Identity.Name;
+
+      var borrow = new Borrowed()
+      {
+        BorrowedAt = new DateTime(),
+        ReturnedAt = null,
+        BorrowedItem = new BorrowedItem() {
+          Album = album,
+          User = user
+        }
+      };
+
+      _context.Borrowed.Add(borrow);
+      await _context.SaveChangesAsync();
+      
       return RedirectToAction(nameof(Index));
     }
 

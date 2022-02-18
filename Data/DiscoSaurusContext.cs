@@ -9,6 +9,7 @@ namespace DiscoSaurus.Data
     {
     }
 
+    public DbSet<Borrowed> Borrowed { get; set; }
     public DbSet<Album> Albums { get; set; }
     public DbSet<Genre> Genres { get; set; }
     public DbSet<Artist> Artists { get; set; }
