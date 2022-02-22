@@ -37,12 +37,12 @@ public class LoginController : Controller
 
     if (ModelState.IsValid)
     { 
-      var validUser = await _context.Users.Where(userInDb => userInDb.Username == user.Username).FirstOrDefaultAsync();
+      var validUser = await _context.Users.Where(userInDb => userInDb.Username == user.Username && userInDb.Password == user.Password).FirstOrDefaultAsync();
       
       if (validUser == null)
       {
         ModelState.AddModelError(string.Empty, "Invalid username or password");
-        return View();
+        return View("index");
       }
       
       // Creates a list of claims containg claim-types for name and role
