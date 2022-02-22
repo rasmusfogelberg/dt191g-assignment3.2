@@ -29,7 +29,10 @@ namespace DiscoSaurus.Controllers
       // Get userId from cookie using ClaimTypes (this is set in LoginController after successful login)
       var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
       var user = await _context.Users.FindAsync(int.Parse(userId));
+
       ViewBag.CurrentUserId = user.UserId;
+      ViewBag.Borroweds = await _context.Borrowed.ToListAsync();
+      ViewBag.BorrowedItems = await _context.BorrowedItem.ToListAsync();
 
       // Get album from context and populate related data
       var album = from a in _context.Albums
@@ -123,7 +126,7 @@ namespace DiscoSaurus.Controllers
     // POST: Album/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("AlbumId,GenreId,ArtistId,Title,Price")] Album album)
+    public async Task<IActionResult> Edit(int id, [Bind("AlbumId,GenreId,ArtistId,Title,Price,IsAvailable,LentToUser")] Album album)
     {
       if (id != album.AlbumId)
       {
@@ -257,7 +260,7 @@ namespace DiscoSaurus.Controllers
     }
 
     // GET: Album/Return/5
-    public async Task<IActionResult> Return(int albumId)
+    public async Task<IActionResult> Return(int albumId, int borrowedItemId)
     {
       if (!AlbumExists(albumId))
       {
@@ -274,7 +277,10 @@ namespace DiscoSaurus.Controllers
         return NotFound();
       }
 
-      var borrowed = await _context.Borrowed.Include(b => b.BorrowedItem).SingleOrDefaultAsync<Borrowed>(a => a.BorrowedItem.Album.AlbumId == albumId && a.ReturnedAt == null);
+      var borrowed = await _context.Borrowed
+        .Include(b => b.BorrowedItem)
+        .SingleOrDefaultAsync<Borrowed>(a => a.BorrowedItem.Album.AlbumId == albumId && a.ReturnedAt == null && a.BorrowedItem.BorrowedItemId == borrowedItemId);
+
       ViewBag.BorrowedId = borrowed.BorrowedId;
 
       return View(album);
@@ -283,13 +289,13 @@ namespace DiscoSaurus.Controllers
     // POST: Album/Return/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Return(int albumId, [Bind("BorrowedId")] int borrowedId)
+    public async Task<IActionResult> ReturnConfirmed(int albumId, [Bind("BorrowedId")] int borrowedId)
     {
       if (!AlbumExists(albumId))
       {
         return NotFound();
       }
-      
+
       try
       {
         // Similar to what happens in borrow action but "reversed"

@@ -37,7 +37,7 @@
         </dd>
     </dl>
     
-    <form asp-action="Return">
+    <form asp-action="ReturnConfirmed">
         <input type="hidden" asp-for="AlbumId" />
         <input type="hidden" name="BorrowedId" value="@ViewBag.BorrowedId" />
         <input type="submit" value="Return" class="btn btn-danger" /> |

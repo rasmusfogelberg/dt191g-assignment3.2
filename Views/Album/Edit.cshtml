@@ -13,6 +13,8 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="AlbumId" />
+            <input type="hidden" asp-for="IsAvailable" />
+            <input type="hidden" asp-for="LentToUser" />
             <div class="form-group">
                 <label asp-for="Genre" class="control-label"></label>
                 <select asp-for="GenreId" class="form-control" asp-items="ViewBag.GenreName"></select>

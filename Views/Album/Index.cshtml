@@ -5,7 +5,6 @@
 }
 
 <h1>Index</h1>
-<p>Currently logged in user: @ViewBag.CurrentUserId</p>
 <p>
     <a asp-action="Create">Create New</a>
 </p>
@@ -64,17 +63,30 @@
                         <a asp-action="Details" asp-route-id="@item.AlbumId">Details</a> |
                         <a asp-action="Delete" asp-route-id="@item.AlbumId">Delete</a> |
 
-                        <p>User id of borrowed item: @item.LentToUser</p>
-
-
-
                         @if (@item.LentToUser != ViewBag.CurrentUserId && item.IsAvailable == false)
                         {
-                            <p>N/A</p>
+                            <span>N/A</span>
                         }
                         else if (@item.LentToUser == ViewBag.CurrentUserId && item.IsAvailable == false)
                         {
-                            <a asp-action="Return" asp-route-albumId="@item.AlbumId">Return</a>
+                            @foreach (var borrowed in @ViewBag.Borroweds)
+                            {
+                                @if (borrowed.BorrowedItem.User != null)
+                                {
+                                    @if (item.LentToUser == borrowed.BorrowedItem.User.UserId && item.AlbumId ==
+                                   borrowed.BorrowedItem.Album.AlbumId)
+                                    {
+                                        @if (borrowed.ReturnedAt == null)
+                                        {
+                                            <a asp-action="Return" asp-route-albumId="@item.AlbumId"
+                    asp-route-borrowedItemId="@borrowed.BorrowedItem.BorrowedItemId">Return</a>
+                                        }
+                                    }
+                                }
+
+                            }
+
+
                         }
                         else
                         {
