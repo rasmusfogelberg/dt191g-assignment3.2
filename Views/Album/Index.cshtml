@@ -74,13 +74,11 @@
                                 @if (borrowed.BorrowedItem.User != null)
                                 {
                                     @if (item.LentToUser == borrowed.BorrowedItem.User.UserId && item.AlbumId ==
-                                   borrowed.BorrowedItem.Album.AlbumId)
+                                   borrowed.BorrowedItem.Album.AlbumId && borrowed.ReturnedAt == null)
                                     {
-                                        @if (borrowed.ReturnedAt == null)
-                                        {
-                                            <a asp-action="Return" asp-route-albumId="@item.AlbumId"
-                    asp-route-borrowedItemId="@borrowed.BorrowedItem.BorrowedItemId">Return</a>
-                                        }
+                                        <a asp-action="Return" asp-route-albumId="@item.AlbumId"
+                                            asp-route-borrowedItemId="@borrowed.BorrowedItem.BorrowedItemId">Return</a>
+
                                     }
                                 }
 
