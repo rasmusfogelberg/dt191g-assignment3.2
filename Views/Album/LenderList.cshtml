@@ -1,0 +1,45 @@
+@model IEnumerable<DiscoSaurus.Models.Borrowed>
+
+@{
+  ViewData["Title"] = "Lender List";
+}
+
+<h1>Lender List</h1>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>
+        @Html.DisplayNameFor(model => model.BorrowedItem.Album.Title)
+      </th>
+      <th>
+        Borrowed by
+      </th>
+      <th>
+        Borrowed at
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    @if (Model != null)
+    {
+      @foreach (var item in Model)
+      {
+        @if (item.ReturnedAt == null)
+        {
+          <tr>
+            <td>
+              @Html.DisplayFor(modelItem => item.BorrowedItem.Album.Title)
+            </td>
+            <td>
+              @Html.DisplayFor(modelItem => item.BorrowedItem.User.Username)
+            </td>
+            <td>
+              @Html.DisplayFor(modelItem => item.BorrowedAt)
+            </td>
+          </tr>
+        }
+      }
+    }
+  </tbody>
+</table>

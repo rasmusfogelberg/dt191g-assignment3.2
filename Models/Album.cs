@@ -7,8 +7,8 @@ namespace DiscoSaurus.Models
     public int ArtistId { get; set; }
     public string Title { get; set; }
     public decimal Price { get; set; }
-    // Haven't decided if I want this yet
-    // public string AlbumArtUrl { get; set; }
+    public bool IsAvailable { get; set; } = true;
+    public int? LentToUser { get; set; }
     public Genre Genre { get; set; }
     public Artist Artist { get; set; }
   }
