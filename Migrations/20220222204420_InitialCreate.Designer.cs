@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DiscoSaurus.Migrations
 {
     [DbContext(typeof(DiscoSaurusContext))]
-    [Migration("20220222170708_InitialCreate")]
+    [Migration("20220222204420_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
