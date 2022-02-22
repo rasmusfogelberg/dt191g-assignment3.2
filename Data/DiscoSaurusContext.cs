@@ -16,6 +16,8 @@ namespace DiscoSaurus.Data
     public DbSet<Genre> Genres { get; set; }
     public DbSet<User> Users { get; set; }
 
+
+    // Seeding database with initial values
     protected override void OnModelCreating(ModelBuilder builder)
     {
       builder.Entity<Genre>().HasData(

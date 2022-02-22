@@ -23,12 +23,6 @@ public class LoginController : Controller
     return View();
   }
 
-  // Checks so login credentials are valid
-  private bool IsValidLogin(string userName, string password)
-  {
-    return userName.Equals("admin") && password.Equals("password");
-  }
-
   // If the user enters valid credentials s/he is logged in
   [HttpPost]
   [ValidateAntiForgeryToken]
@@ -37,6 +31,7 @@ public class LoginController : Controller
 
     if (ModelState.IsValid)
     { 
+      // Checks so login credentials are valid
       var validUser = await _context.Users.Where(userInDb => userInDb.Username == user.Username && userInDb.Password == user.Password).FirstOrDefaultAsync();
       
       if (validUser == null)

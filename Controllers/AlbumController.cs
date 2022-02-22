@@ -26,10 +26,12 @@ namespace DiscoSaurus.Controllers
     // GET: Album
     public async Task<IActionResult> Index(string searchString)
     {
+      // Get userId from cookie using ClaimTypes (this is set in LoginController after successful login)
       var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
       var user = await _context.Users.FindAsync(int.Parse(userId));
       ViewBag.CurrentUserId = user.UserId;
 
+      // Get album from context and populate related data
       var album = from a in _context.Albums
           .Include(album => album.Artist)
           .Include(album => album.Genre)
@@ -40,11 +42,14 @@ namespace DiscoSaurus.Controllers
         return NotFound();
       }
 
+      // Search function. If string is empty it will not filter 
       if (!String.IsNullOrEmpty(searchString))
       {
+        // Filter albums by title using searchString. 
         album = album.Where(search => search.Title!.Contains(searchString));
       }
 
+      // Return filtered albums as list
       return View(await album.ToListAsync());
     }
 
@@ -72,14 +77,13 @@ namespace DiscoSaurus.Controllers
     // GET: Album/Create
     public IActionResult Create()
     {
+      // Populates dropdown list with Artist and Genre
       ViewData["ArtistName"] = new SelectList(_context.Set<Artist>(), "ArtistId", "Name");
       ViewData["GenreName"] = new SelectList(_context.Set<Genre>(), "GenreId", "Name");
       return View();
     }
 
-    // POST: Album/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    // POST: Album/Create (This stores it in the db)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("AlbumId,GenreId,ArtistId,Title,Price")] Album album)
@@ -117,8 +121,6 @@ namespace DiscoSaurus.Controllers
     }
 
     // POST: Album/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("AlbumId,GenreId,ArtistId,Title,Price")] Album album)
@@ -137,14 +139,7 @@ namespace DiscoSaurus.Controllers
         }
         catch (DbUpdateConcurrencyException)
         {
-          if (!AlbumExists(album.AlbumId))
-          {
-            return NotFound();
-          }
-          else
-          {
-            throw;
-          }
+          return NotFound();
         }
         return RedirectToAction(nameof(Index));
       }
@@ -181,9 +176,16 @@ namespace DiscoSaurus.Controllers
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-      var album = await _context.Albums.FindAsync(id);
-      _context.Albums.Remove(album);
-      await _context.SaveChangesAsync();
+      try
+      {
+        var album = await _context.Albums.FindAsync(id);
+        _context.Albums.Remove(album);
+        await _context.SaveChangesAsync();
+      }
+      catch
+      {
+        return NotFound();
+      }
 
       return RedirectToAction(nameof(Index));
     }
@@ -216,12 +218,15 @@ namespace DiscoSaurus.Controllers
     {
       try
       {
+        // Retrive album from database
         var album = await _context.Albums.FindAsync(albumToBorrow.AlbumId);
+
         album.IsAvailable = false;
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var user = await _context.Users.FindAsync(int.Parse(userId));
         album.LentToUser = user.UserId;
 
+        // Define borrow object for table Borrow in database
         var borrow = new Borrowed()
         {
           BorrowedAt = DateTime.Now,
@@ -284,9 +289,10 @@ namespace DiscoSaurus.Controllers
       {
         return NotFound();
       }
-
+      
       try
       {
+        // Similar to what happens in borrow action but "reversed"
         var album = await _context.Albums.FindAsync(albumId);
         var borrow = await _context.Borrowed
                       .Include(b => b.BorrowedItem)
@@ -297,7 +303,6 @@ namespace DiscoSaurus.Controllers
 
         if (borrow != null)
         {
-
           borrow.ReturnedAt = DateTime.Now;
           borrow.BorrowedId = borrowedId;
 
