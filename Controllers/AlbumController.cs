@@ -24,16 +24,34 @@ namespace DiscoSaurus.Controllers
     }
 
     // GET: Album
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string searchString)
     {
-      var albumContext = _context.Albums.Include(a => a.Artist).Include(a => a.Genre);
-      return View(await albumContext.ToListAsync());
+      var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+      var user = await _context.Users.FindAsync(int.Parse(userId));
+      ViewBag.CurrentUserId = user.UserId;
+
+      var album = from a in _context.Albums
+          .Include(album => album.Artist)
+          .Include(album => album.Genre)
+                  select a;
+
+      if (album == null)
+      {
+        return NotFound();
+      }
+
+      if (!String.IsNullOrEmpty(searchString))
+      {
+        album = album.Where(search => search.Title!.Contains(searchString));
+      }
+
+      return View(await album.ToListAsync());
     }
 
     // GET: Album/Details/5
-    public async Task<IActionResult> Details(int? id)
+    public async Task<IActionResult> Details(int id)
     {
-      if (id == null)
+      if (!AlbumExists(id))
       {
         return NotFound();
       }
@@ -42,6 +60,7 @@ namespace DiscoSaurus.Controllers
           .Include(a => a.Artist)
           .Include(a => a.Genre)
           .FirstOrDefaultAsync(m => m.AlbumId == id);
+
       if (album == null)
       {
         return NotFound();
@@ -77,20 +96,23 @@ namespace DiscoSaurus.Controllers
     }
 
     // GET: Album/Edit/5
-    public async Task<IActionResult> Edit(int? id)
+    public async Task<IActionResult> Edit(int id)
     {
-      if (id == null)
+      if (!AlbumExists(id))
       {
         return NotFound();
       }
 
       var album = await _context.Albums.FindAsync(id);
+
       if (album == null)
       {
         return NotFound();
       }
+
       ViewData["ArtistName"] = new SelectList(_context.Set<Artist>(), "ArtistId", "Name", album.ArtistId);
       ViewData["GenreName"] = new SelectList(_context.Set<Genre>(), "GenreId", "Name", album.GenreId);
+
       return View(album);
     }
 
@@ -126,15 +148,17 @@ namespace DiscoSaurus.Controllers
         }
         return RedirectToAction(nameof(Index));
       }
+
       ViewData["ArtistId"] = new SelectList(_context.Set<Artist>(), "ArtistId", "ArtistId", album.ArtistId);
       ViewData["GenreId"] = new SelectList(_context.Set<Genre>(), "GenreId", "GenreId", album.GenreId);
+
       return View(album);
     }
 
     // GET: Album/Delete/5
-    public async Task<IActionResult> Delete(int? id)
+    public async Task<IActionResult> Delete(int id)
     {
-      if (id == null)
+      if (!AlbumExists(id))
       {
         return NotFound();
       }
@@ -143,6 +167,7 @@ namespace DiscoSaurus.Controllers
           .Include(a => a.Artist)
           .Include(a => a.Genre)
           .FirstOrDefaultAsync(m => m.AlbumId == id);
+
       if (album == null)
       {
         return NotFound();
@@ -159,13 +184,14 @@ namespace DiscoSaurus.Controllers
       var album = await _context.Albums.FindAsync(id);
       _context.Albums.Remove(album);
       await _context.SaveChangesAsync();
+
       return RedirectToAction(nameof(Index));
     }
 
     // GET: Album/Borrow/5
-    public async Task<IActionResult> Borrow(int? id)
+    public async Task<IActionResult> Borrow(int albumId)
     {
-      if (id == null)
+      if (!AlbumExists(albumId))
       {
         return NotFound();
       }
@@ -173,7 +199,8 @@ namespace DiscoSaurus.Controllers
       var album = await _context.Albums
           .Include(a => a.Artist)
           .Include(a => a.Genre)
-          .FirstOrDefaultAsync(m => m.AlbumId == id);
+          .FirstOrDefaultAsync(m => m.AlbumId == albumId);
+
       if (album == null)
       {
         return NotFound();
@@ -185,29 +212,145 @@ namespace DiscoSaurus.Controllers
     // POST: Album/Borrow/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Borrow(int id, [Bind("AlbumId,UserId")] Album albumToBorrow)
+    public async Task<IActionResult> Borrow([Bind("AlbumId")] Album albumToBorrow)
     {
-      var album = await _context.Albums.FindAsync(id);
-      var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-      var user = await _context.Users.FindAsync(userId);
-
-      // Add to "Borrow"-table: UserId and AlbumId
-      string name = this.User.Identity.Name;
-
-      var borrow = new Borrowed()
+      try
       {
-        BorrowedAt = new DateTime(),
-        ReturnedAt = null,
-        BorrowedItem = new BorrowedItem() {
-          Album = album,
-          User = user
-        }
-      };
+        var album = await _context.Albums.FindAsync(albumToBorrow.AlbumId);
+        album.IsAvailable = false;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var user = await _context.Users.FindAsync(int.Parse(userId));
+        album.LentToUser = user.UserId;
 
-      _context.Borrowed.Add(borrow);
-      await _context.SaveChangesAsync();
-      
+        var borrow = new Borrowed()
+        {
+          BorrowedAt = DateTime.Now,
+          ReturnedAt = null,
+          BorrowedItem = new BorrowedItem()
+          {
+            Album = album,
+            User = user
+          }
+        };
+
+        _context.Borrowed.Add(borrow);
+        await _context.SaveChangesAsync();
+      }
+      catch (DbUpdateConcurrencyException)
+      {
+        if (!AlbumExists(albumToBorrow.AlbumId))
+        {
+          return NotFound();
+        }
+        else
+        {
+          throw;
+        }
+      }
+
       return RedirectToAction(nameof(Index));
+    }
+
+    // GET: Album/Return/5
+    public async Task<IActionResult> Return(int albumId)
+    {
+      if (!AlbumExists(albumId))
+      {
+        return NotFound();
+      }
+
+      var album = await _context.Albums
+          .Include(a => a.Artist)
+          .Include(a => a.Genre)
+          .FirstOrDefaultAsync(m => m.AlbumId == albumId);
+
+      if (album == null)
+      {
+        return NotFound();
+      }
+
+      var borrowed = await _context.Borrowed.Include(b => b.BorrowedItem).SingleOrDefaultAsync<Borrowed>(a => a.BorrowedItem.Album.AlbumId == albumId && a.ReturnedAt == null);
+      ViewBag.BorrowedId = borrowed.BorrowedId;
+
+      return View(album);
+    }
+
+    // POST: Album/Return/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Return(int albumId, [Bind("BorrowedId")] int borrowedId)
+    {
+      if (!AlbumExists(albumId))
+      {
+        return NotFound();
+      }
+
+      try
+      {
+        var album = await _context.Albums.FindAsync(albumId);
+        var borrow = await _context.Borrowed
+                      .Include(b => b.BorrowedItem)
+                      .FirstOrDefaultAsync(b => b.BorrowedId == borrowedId);
+
+        album.IsAvailable = true;
+        album.LentToUser = null;
+
+        if (borrow != null)
+        {
+
+          borrow.ReturnedAt = DateTime.Now;
+          borrow.BorrowedId = borrowedId;
+
+          _context.Borrowed.Update(borrow);
+          await _context.SaveChangesAsync();
+        }
+
+      }
+      catch (DbUpdateConcurrencyException)
+      {
+        return NotFound();
+      }
+      return RedirectToAction(nameof(Index));
+    }
+
+    // GET: LenderList
+    public async Task<IActionResult> LenderList()
+    {
+      var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+      var user = await _context.Users.FindAsync(int.Parse(userId));
+      ViewBag.CurrentUserId = user.UserId;
+
+      var borrowed = _context.Borrowed
+          .Include(borrowed => borrowed.BorrowedItem)
+          .Include(borrowed => borrowed.BorrowedItem.Album)
+          .Include(borrowed => borrowed.BorrowedItem.User);
+
+      if (borrowed == null)
+      {
+        return NotFound();
+      }
+
+      return View(await borrowed.ToListAsync());
+    }
+
+    // GET: LenderHistory
+    public async Task<IActionResult> LenderHistory()
+    {
+      var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+      var user = await _context.Users.FindAsync(int.Parse(userId));
+      ViewBag.CurrentUserId = user.UserId;
+
+      var borrowed = _context.Borrowed
+          .Include(borrowed => borrowed.BorrowedItem)
+          .Include(borrowed => borrowed.BorrowedItem.Album)
+          .Include(borrowed => borrowed.BorrowedItem.User);
+
+      if (borrowed == null)
+      {
+        return NotFound();
+      }
+
+      return View(await borrowed.ToListAsync());
     }
 
     private bool AlbumExists(int id)

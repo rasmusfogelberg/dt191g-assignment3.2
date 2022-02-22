@@ -5,10 +5,18 @@
 }
 
 <h1>Index</h1>
-
+<p>Currently logged in user: @ViewBag.CurrentUserId</p>
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+
+<form asp-controller="Album" asp-action="Index">
+    <p>
+        Title: <input type="text" name="SearchString" />
+        <input type="submit" value="Filter" />
+        <a asp-action="index">Clear</a>
+    </p>
+</form>
 <table class="table">
     <thead>
         <tr>
@@ -46,16 +54,33 @@
                         }
                     </td>
                     <td>
-                         @if (item.Artist != null)
+                        @if (item.Artist != null)
                         {
-                        @Html.DisplayFor(modelItem => item.Artist.Name)
+                            @Html.DisplayFor(modelItem => item.Artist.Name)
                         }
                     </td>
                     <td>
                         <a asp-action="Edit" asp-route-id="@item.AlbumId">Edit</a> |
                         <a asp-action="Details" asp-route-id="@item.AlbumId">Details</a> |
                         <a asp-action="Delete" asp-route-id="@item.AlbumId">Delete</a> |
-                        <a asp-action="Borrow" asp-route-id="@item.AlbumId">Borrow</a>
+
+                        <p>User id of borrowed item: @item.LentToUser</p>
+
+
+
+                        @if (@item.LentToUser != ViewBag.CurrentUserId && item.IsAvailable == false)
+                        {
+                            <p>N/A</p>
+                        }
+                        else if (@item.LentToUser == ViewBag.CurrentUserId && item.IsAvailable == false)
+                        {
+                            <a asp-action="Return" asp-route-albumId="@item.AlbumId">Return</a>
+                        }
+                        else
+                        {
+                            <a asp-action="Borrow" asp-route-albumId="@item.AlbumId">Borrow</a>
+                        }
+
                     </td>
                 </tr>
             }

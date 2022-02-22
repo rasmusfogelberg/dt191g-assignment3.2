@@ -1,18 +1,19 @@
 using DiscoSaurus.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace DiscoSaurus.Data 
+namespace DiscoSaurus.Data
 {
-  public class DiscoSaurusContext : DbContext 
+  public class DiscoSaurusContext : DbContext
   {
-    public DiscoSaurusContext(DbContextOptions<DiscoSaurusContext> options):base(options)
+    public DiscoSaurusContext(DbContextOptions<DiscoSaurusContext> options) : base(options)
     {
     }
 
-    public DbSet<Borrowed> Borrowed { get; set; }
     public DbSet<Album> Albums { get; set; }
-    public DbSet<Genre> Genres { get; set; }
     public DbSet<Artist> Artists { get; set; }
+    public DbSet<Borrowed> Borrowed { get; set; }
+    public DbSet<BorrowedItem> BorrowedItem { get; set; }
+    public DbSet<Genre> Genres { get; set; }
     public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -39,11 +40,11 @@ namespace DiscoSaurus.Data
         new Album { AlbumId = 5, ArtistId = 5, GenreId = 3, Title = "Volume Rock", Price = 39.99m }
       );
 
-      /* builder.Entity<User>().HasData(
-        new User { UserId = 1, Username = "John Doe", Password = "password" },
-        new User { UserId = 2, Username = "Jane Smith", Password = "password"  },
-        new User { UserId = 3, Username = "Moby Dick", Password = "password"  }
-      ); */
+      builder.Entity<User>().HasData(
+        new User { UserId = 1, Username = "Mattias", Password = "password" },
+        new User { UserId = 2, Username = "Malin", Password = "password123" },
+        new User { UserId = 3, Username = "Lars", Password = "123password" }
+      );
     }
   }
 }
